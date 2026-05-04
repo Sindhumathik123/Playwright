@@ -1,0 +1,185 @@
+# 🎭 Fixtures + POM (Page Object Model) 
+
+## New Approach (Fixtures + Multiple Page Objects)
+
+Now we are doing this 👇
+
+test(`Create Lead Verification`, async ({ lop, wp }) => {
+
+**No `new` keyword**
+**No page object creation inside test**
+**Test focuses only on business flow**
+
+---
+
+## First Understand: What are we fixing?
+
+### Real Application Flow
+
+Login Page  →  Welcome Page  →  Leads Page  →  View Lead Page
+
+=> Each screen is a **different page**
+=> Each page deserves its **own Page Object**
+
+This is **true POM**.
+
+---
+
+## Custom Fixture File (Brain of the Design)
+
+### customFixtures.ts
+
+import { test as baseTest } from "@playwright/test"
+import { LoginPage } from "../pages/01-loginPage"
+import { WelcomePage } from "../pages/02-welcomePage"
+
+We are importing:
+
+* Playwright base test
+* Page Object classes
+
+---
+
+## Why this `type myFixtures`?
+
+type myFixtures = {
+    lop: LoginPage,
+    wp: WelcomePage
+}
+
+### Explanation 👇
+
+> We are telling TypeScript:
+> “My test will receive **extra objects** called `lop` and `wp`”
+
+* `lop` → LoginPage object
+* `wp` → WelcomePage object
+
+📌 This gives:
+
+* IntelliSense
+* Auto-suggestions
+* Compile-time safety
+
+---
+
+## Extending Playwright Test with POM Objects
+
+export const test = baseTest.extend<myFixtures>({
+
+### Meaning in simple words:
+
+> “Playwright, I want to add **my own fixtures** on top of your default ones.”
+
+---
+
+## Login Page Fixture
+
+lop: async ({ page }, use) => {
+    const lop = new LoginPage(page)
+    await use(lop)
+}
+
+### What happens here?
+
+✔ Playwright gives `page`
+✔ We create `LoginPage` object
+✔ We give it to the test
+
+ Test **does not know** how object is created.
+
+---
+
+## Welcome Page Fixture
+
+
+wp: async ({ page }, use) => {
+    const wp = new WelcomePage(page)
+    await use(wp)
+}
+
+Same concept:
+
+* Same `page`
+* Different responsibilities
+* Clean separation
+
+---
+
+## Test File (Clean Business Flow)
+
+test(`Create Lead Verification`, async ({ lop, wp }) => {
+
+
+### What the test receives?
+
+| Fixture | Page Object |
+| ------- | ----------- |
+| `lop`   | LoginPage   |
+| `wp`    | WelcomePage |
+
+---
+
+## Business Flow Reads Like English 
+
+await lop.loadurl(process.env.BaseUrl as string)
+await lop.enterCredentials(credentials[0].Username, credentials[0].Password)
+await lop.clickLogin()
+
+await wp.clickCRM()
+```
+
+ Anyone reading this understands:
+
+* Login
+* Navigate to CRM
+
+👉 **No locators**
+👉 **No Playwright syntax**
+👉 **Only business steps**
+
+---
+
+### Correct mindset (Enterprise)
+
+* Each page:
+
+  * Own locators
+  * Own responsibilities
+* Tests should **orchestrate**, not **implement**
+
+📌 This follows **Single Responsibility Principle (SRP)**.
+
+---
+
+## Execution Flow (Very Important for Learners)
+
+```text
+Playwright starts
+ ├─ Creates page
+ ├─ Creates LoginPage object (lop)
+ ├─ Creates WelcomePage object (wp)
+ ├─ Test starts
+ │    ├─ Uses lop
+ │    ├─ Uses wp
+ ├─ Test ends
+ └─ Playwright cleans up
+```
+
+---
+
+## Why This Design is INDUSTRY STANDARD
+
+✅ Clean tests
+✅ Easy maintenance
+✅ Scales to 100+ pages
+✅ Parallel execution safe
+
+---
+
+## One-Line Interview Answer 
+
+> **Using fixtures with POM allows us to inject page objects into tests, keeping tests clean, scalable, and aligned with real application flow.**
+
+
+
